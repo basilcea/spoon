@@ -7,9 +7,8 @@ This is NOT reversible.
 */
 require("dotenv").config();
 const bluebird = require("bluebird");
-const axios = require("axios");
 const bakRepos = require("./backups.json");
-
+const axios = require("axios");
 const token = process.env.GHKEY; //YOUR API KEY HERE.
 
 axios.interceptors.request.use(config => {

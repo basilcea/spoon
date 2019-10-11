@@ -12,8 +12,8 @@ const fs = require("fs");
 const axios = require("axios");
 const bluebird = require("bluebird");
 
-const token = process.env.GHKEY; // YOUR API KEY HERE.
-const user = "fake-user"; // YOUR GITHUB HANDLE HERE
+const token = process.env.GHKEY // YOUR API KEY HERE.
+const user = process.env.USERNAME; // YOUR GITHUB HANDLE HERE
 
 axios.interceptors.request.use(config => {
   config.headers.authorization = `bearer ${token}`;
@@ -35,17 +35,17 @@ const main = async () => {
     return null
   } else {
     console.log("Creating backup...");
-    await genBackup(forkedRepos);
-    console.log("Backup complete.");
-    console.log("Renaming existing forks...");
-    await renameForks(forkedRepos);
-    console.log("Renaming complete.");
-    console.log("Generating new repos...");
-    await genRepos(forkedRepos);
-    console.log("New repos complete.");
-    console.log("Importing data from forks to new repos...");
-    await importData(forkedRepos);
-    console.log("Import complete!");
+    // await genBackup(forkedRepos);
+    // console.log("Backup complete.");
+    // console.log("Renaming existing forks...");
+    // await renameForks(forkedRepos);
+    // console.log("Renaming complete.");
+    // console.log("Generating new repos...");
+    // await genRepos(forkedRepos);
+    // console.log("New repos complete.");
+    // console.log("Importing data from forks to new repos...");
+    // await importData(forkedRepos);
+    // console.log("Import complete!");
   }
 };
 
@@ -57,22 +57,24 @@ function fetchRepos() {
     try {
       //TODO Deal with > 100 repos.
       const { data: repos } = await axios.get(
-        `https://api.github.com/users/${user}/repos?per_page=100`
+        `https://api.github.com/users/${user}/repos?per_page=1`
       );
-      const filteredRepos = repos.reduce((arr, repo) => {
-        if (repo.fork) {
-          arr.push({
-            owner: repo.owner.login,
-            name: repo.name,
-            full_name: repo.full_name,
-            clone_url: repo.clone_url,
-            forked: repo.fork,
-            description: repo.description
-          });
-        }
-        return arr;
-      }, []);
-      resolve(filteredRepos);
+      console.log(repos)
+      
+      // const filteredRepos = repos.reduce((arr, repo) => {
+      //   if (repo.fork) {
+      //     arr.push({
+      //       owner: repo.owner.login,
+      //       name: repo.name,
+      //       full_name: repo.full_name,
+      //       clone_url: repo.clone_url,
+      //       forked: repo.fork,
+      //       description: repo.description
+      //     });
+      //   }
+      //   return arr;
+      // }, []);
+      // resolve(filteredRepos);
     } catch (error) {
       console.error("ERROR", error);
       reject(error);
