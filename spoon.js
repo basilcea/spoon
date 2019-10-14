@@ -12,7 +12,7 @@ const fs = require("fs");
 const axios = require("axios");
 const bluebird = require("bluebird");
 
-const token = process.env.GHKEY // YOUR API KEY HERE.
+const token = process.env.GHKEY; // YOUR API KEY HERE.
 const user = process.env.USERNAME; // YOUR GITHUB HANDLE HERE
 
 axios.interceptors.request.use(config => {
@@ -26,26 +26,24 @@ const main = async () => {
   const forkedRepos = await fetchRepos();
   console.log("Fetch complete.");
   console.log(
-    `You have ${
-    forkedRepos.length
-    } forked repositories. Please search -bak after the operation and confirm the number of repos with -bak in the name.`
+    `You have ${forkedRepos.length} forked repositories. Please search -bak after the operation and confirm the number of repos with -bak in the name.`
   );
   if (forkedRepos.length === 0) {
-    console.log('You currently have no forked repos, here\'s a pony!')
-    return null
+    console.log("You currently have no forked repos, here's a pony!");
+    return null;
   } else {
     console.log("Creating backup...");
-    // await genBackup(forkedRepos);
-    // console.log("Backup complete.");
-    // console.log("Renaming existing forks...");
-    // await renameForks(forkedRepos);
-    // console.log("Renaming complete.");
-    // console.log("Generating new repos...");
-    // await genRepos(forkedRepos);
-    // console.log("New repos complete.");
-    // console.log("Importing data from forks to new repos...");
-    // await importData(forkedRepos);
-    // console.log("Import complete!");
+    await genBackup(forkedRepos);
+    console.log("Backup complete.");
+    console.log("Renaming existing forks...");
+    await renameForks(forkedRepos);
+    console.log("Renaming complete.");
+    console.log("Generating new repos...");
+    await genRepos(forkedRepos);
+    console.log("New repos complete.");
+    console.log("Importing data from forks to new repos...");
+    await importData(forkedRepos);
+    console.log("Import complete!");
   }
 };
 
@@ -59,22 +57,22 @@ function fetchRepos() {
       const { data: repos } = await axios.get(
         `https://api.github.com/users/${user}/repos?per_page=1`
       );
-      console.log(repos)
-      
-      // const filteredRepos = repos.reduce((arr, repo) => {
-      //   if (repo.fork) {
-      //     arr.push({
-      //       owner: repo.owner.login,
-      //       name: repo.name,
-      //       full_name: repo.full_name,
-      //       clone_url: repo.clone_url,
-      //       forked: repo.fork,
-      //       description: repo.description
-      //     });
-      //   }
-      //   return arr;
-      // }, []);
-      // resolve(filteredRepos);
+      console.log(repos);
+
+      const filteredRepos = repos.reduce((arr, repo) => {
+        if (repo.fork) {
+          arr.push({
+            owner: repo.owner.login,
+            name: repo.name,
+            full_name: repo.full_name,
+            clone_url: repo.clone_url,
+            forked: repo.fork,
+            description: repo.description
+          });
+        }
+        return arr;
+      }, []);
+      resolve(filteredRepos);
     } catch (error) {
       console.error("ERROR", error);
       reject(error);
@@ -167,49 +165,49 @@ function importData(repos) {
   });
 }
 
-//6. You should now have all new repos with the original names AND all of your -bak repos that are still forked. Please proceed to drawer.js ONLY if this is true.
+// 6. You should now have all new repos with the original names AND all of your -bak repos that are still forked. Please proceed to drawer.js ONLY if this is true.
 
-//Old import repo code. Bluebird IS tested and GOOD.
-// repos.forEach(async repo => {
-//     try {
-//       const res = await axios.put(
-//         `https://api.github.com/repos/${repo.owner}/${repo.name}/import`,
-//         {
-//           vcs_url: `https://github.com/${repo.full_name}-bak.git`,
-//           vcs: "git"
-//         }
-//       );
-//       console.log(res);
-//     } catch (error) {
-//       console.log("IMPORT ERROR", error);
-//       reject();
-//     }
-//   });
+// Old import repo code. Bluebird IS tested and GOOD.
+repos.forEach(async repo => {
+    try {
+      const res = await axios.put(
+        `https://api.github.com/repos/${repo.owner}/${repo.name}/import`,
+        {
+          vcs_url: `https://github.com/${repo.full_name}-bak.git`,
+          vcs: "git"
+        }
+      );
+      console.log(res);
+    } catch (error) {
+      console.log("IMPORT ERROR", error);
+      reject();
+    }
+  });
 
-// Old generate new repo code. Bluebird function NOT tested yet
-// repos.forEach(async repo => {
-//     try {
-//       await axios.post(`https://api.github.com/user/repos`, {
-//         name: repo.name,
-//         description: repo.description
-//       });
-//       await new Promise(resolve => {
-//         setTimeout(resolve, 500);
-//       });
-//     } catch (error) {
-//       console.log("REPO CREATION ERROR", error);
-//       reject();
-//     }
-//   });
+Old generate new repo code. Bluebird function NOT tested yet
+repos.forEach(async repo => {
+    try {
+      await axios.post(`https://api.github.com/user/repos`, {
+        name: repo.name,
+        description: repo.description
+      });
+      await new Promise(resolve => {
+        setTimeout(resolve, 500);
+      });
+    } catch (error) {
+      console.log("REPO CREATION ERROR", error);
+      reject();
+    }
+  });
 
-// Rename forks old code. Bluebird function NOT tested yet
-// repos.forEach(async repo => {
-//   try {
-//     await axios.patch(`https://api.github.com/repos/${repo.full_name}`, {
-//       name: repo.name + "-bak"
-//     });
-//   } catch (error) {
-//     console.error("RENAME FORK ERROR", error);
-//   }
-// });
-// resolve("Fork renaming complete");
+Rename forks old code. Bluebird function NOT tested yet
+repos.forEach(async repo => {
+  try {
+    await axios.patch(`https://api.github.com/repos/${repo.full_name}`, {
+      name: repo.name + "-bak"
+    });
+  } catch (error) {
+    console.error("RENAME FORK ERROR", error);
+  }
+});
+resolve("Fork renaming complete");
